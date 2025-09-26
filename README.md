@@ -1,39 +1,79 @@
-# Waste Tracker API
+# WasteTracker (Jaseci Version)
 
-This is a simple FastAPI-based API for tracking waste. It allows you to create, retrieve, and delete waste records.
+A simple waste reporting system built using [Jac language](https://docs.jaseci.org/docs/jac/intro) and [Jaseci Framework](https://jaseci.org).
 
-## Project Structure
+## Features
 
-The project is structured as follows:
+- 📥 Report waste items with **geo-location**.
+- � Track which **user** reported each item.
+- �📋 View a detailed list of all reported waste.
+- 🕒 Timestamps are returned in a **human-readable format**.
+- ⚡ Built on a flexible, graph-based backend.
+- 🌐 Instantly available as a REST API via `jsserv`.
 
-- `app/`: Main application folder
-  - `main.py`: FastAPI application entry point
-  - `database.py`: Database connection and session management
-  - `models/`: SQLAlchemy models
-    - `waste.py`: `Waste` model
-  - `routes/`: API routes
-    - `waste.py`: Waste management routes
-- `requirements.txt`: Project dependencies
+## Requirements
+
+- Python 3.8+
+- `pip install jaseci jaseci_serv`
 
 ## How to Run
 
-1.  **Install dependencies:**
+### Method 1: Command-Line Interface (CLI)
+
+1.  **Start the Jaseci Shell:**
     ```bash
-    pip install -r requirements.txt
+    jsctl
     ```
-2.  **Run the application:**
+2.  **Load the Jac program:**
+    ```
+    actions load module waste_tracker.jac
+    ```
+3.  **Run walkers:**
+
+    **Report a new waste item:**
+    ```
+    walker run report_waste -ctx '{"user_name": "Duncan", "item_name": "Plastic Bottle", "lat": -1.286389, "lon": 36.817223}'
+    ```
+
+    **List all reported waste items:**
+    ```
+    walker run list_waste_reports
+    ```
+
+### Method 2: API Server
+
+1.  **Start the Jaseci Server:**
     ```bash
-    uvicorn app.main:app --reload
+    jsserv
     ```
+2.  **Send POST requests to the API:**
 
-The API will be available at `http://127.0.0.1:8000`.
+    You can now use an API client (like `curl` or Postman) to interact with your walkers.
 
-## API Endpoints
+    **Report a new waste item:**
+    *   **URL:** `http://127.0.0.1:8000/js/walker_run`
+    *   **Method:** `POST`
+    *   **Body:**
+        ```json
+        {
+          "name": "report_waste",
+          "ctx": {
+            "user_name": "Alice",
+            "item_name": "Cardboard Box",
+            "lat": -1.2921,
+            "lon": 36.8219
+          }
+        }
+        ```
 
-- `POST /waste/`: Create a new waste record
-- `GET /waste/`: Get all waste records
-- `GET /waste/{waste_id}`: Get a specific waste record by ID
-- `DELETE /waste/{waste_id}`: Delete a specific waste record by ID
-"
-"
-"
+    **List all reported waste items:**
+    *   **URL:** `http://127.0.0.1:8000/js/walker_run`
+    *   **Method:** `POST`
+    *   **Body:**
+        ```json
+        {
+          "name": "list_waste_reports",
+          "ctx": {}
+        }
+        ```
+
