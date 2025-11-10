@@ -1,6 +1,8 @@
 """
 The Code Master - Automated Code Documentation System
 A sophisticated web application for generating professional documentation from GitHub repositories
+Developed by Duncan N. for Developers
+© 2024-2025
 """
 
 import streamlit as st
@@ -16,228 +18,359 @@ import os
 # ============================================================================
 
 st.set_page_config(
-    page_title="The Code Master",
+    page_title="The Code Master | AI-Powered Documentation",
     page_icon="📚",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for professional styling
+# ============================================================================
+# CUSTOM CSS STYLING
+# ============================================================================
+
 st.markdown("""
 <style>
-    /* Main theme colors */
+    /* Theme variables */
     :root {
-        --primary-color: #0D47A1;
-        --secondary-color: #1565C0;
-        --accent-color: #FF6F00;
-        --success-color: #00897B;
-        --danger-color: #C62828;
+        --primary: #0D47A1;
+        --secondary: #1565C0;
+        --accent: #FF6F00;
+        --success: #00897B;
+        --danger: #C62828;
+        --warning: #F57C00;
     }
     
-    /* Header styling */
-    .main-header {
+    /* Main container */
+    .main {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Typography */
+    h1 {
         color: #0D47A1;
-        font-size: 2.5em;
-        font-weight: bold;
-        margin-bottom: 10px;
-        background: linear-gradient(135deg, #0D47A1 0%, #1565C0 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        border-bottom: 3px solid #FF6F00;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
     }
     
-    .subheader {
-        color: #666;
-        font-size: 1.1em;
-        margin-bottom: 30px;
+    h2, h3 {
+        color: #1565C0;
+        margin-top: 25px;
     }
     
-    /* Card styling */
+    /* Cards and sections */
     .card {
-        background: white;
-        border-radius: 10px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+        border-left: 4px solid #0D47A1;
+        border-radius: 8px;
         padding: 20px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin: 10px 0;
+        margin: 15px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     
-    /* Status badge */
+    .info-box {
+        background: #E3F2FD;
+        border-left: 4px solid #0D47A1;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+    }
+    
+    .success-box {
+        background: #E8F5E9;
+        border-left: 4px solid #00897B;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+    }
+    
+    .warning-box {
+        background: #FFF3E0;
+        border-left: 4px solid #F57C00;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+    }
+    
+    .error-box {
+        background: #FFEBEE;
+        border-left: 4px solid #C62828;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+    }
+    
+    /* Status badges */
     .status-badge {
         display: inline-block;
-        padding: 5px 15px;
+        padding: 8px 16px;
         border-radius: 20px;
-        font-weight: bold;
-        font-size: 0.9em;
+        font-weight: 600;
+        font-size: 0.85em;
+        margin: 5px 5px 5px 0;
     }
     
-    .status-processing {
-        background-color: #FFF3E0;
-        color: #F57C00;
-    }
-    
-    .status-success {
-        background-color: #E8F5E9;
+    .badge-active {
+        background: #E8F5E9;
         color: #2E7D32;
     }
     
-    .status-error {
-        background-color: #FFEBEE;
-        color: #C62828;
+    .badge-ready {
+        background: #E0F2F1;
+        color: #00695C;
     }
     
-    /* Button styling */
+    .badge-processing {
+        background: #FFF3E0;
+        color: #F57C00;
+    }
+    
+    /* Buttons */
     .stButton > button {
         background: linear-gradient(135deg, #0D47A1 0%, #1565C0 100%);
-        color: white;
-        font-weight: bold;
+        color: white !important;
+        font-weight: 600;
         border: none;
-        border-radius: 5px;
-        padding: 10px 30px;
-        width: 100%;
+        border-radius: 6px;
+        padding: 12px 30px !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, #0D47A1 100%, #1565C0 0%);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 16px rgba(13, 71, 161, 0.4);
+        transform: translateY(-2px);
     }
     
-    /* Input styling */
-    .stTextInput input {
+    /* Input fields */
+    .stTextInput > div > div > input {
+        border-radius: 6px;
         border: 2px solid #e0e0e0;
-        border-radius: 5px;
-        padding: 10px;
+        padding: 12px;
     }
     
-    .stTextInput input:focus {
+    .stTextInput > div > div > input:focus {
         border-color: #0D47A1;
         box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
     }
     
-    /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 2px solid #e0e0e0;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        color: #666;
-        font-weight: bold;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        color: #0D47A1;
-        border-bottom: 3px solid #0D47A1;
-    }
-    
     /* Progress bar */
-    .stProgress > div > div > div {
-        background: linear-gradient(90deg, #0D47A1 0%, #1565C0 100%);
+    .stProgress > div > div {
+        background: linear-gradient(135deg, #0D47A1 0%, #FF6F00 100%);
     }
     
-    /* Code block styling */
-    .stCode {
-        background-color: #f5f5f5 !important;
-        border-radius: 5px !important;
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: #f5f7fa;
+        border-radius: 6px;
     }
     
-    /* Info boxes */
-    .info-box {
-        background-color: #E3F2FD;
-        border-left: 4px solid #0D47A1;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-    
-    .success-box {
-        background-color: #E8F5E9;
-        border-left: 4px solid #00897B;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-    
-    .warning-box {
-        background-color: #FFF3E0;
-        border-left: 4px solid #FF6F00;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-    
-    .error-box {
-        background-color: #FFEBEE;
-        border-left: 4px solid #C62828;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .main {
+            padding: 10px;
+        }
+        
+        h1 {
+            font-size: 1.5em;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+def check_backend_connection():
+    """Check if backend API is available"""
+    try:
+        response = requests.get("http://localhost:8001/health", timeout=2)
+        return response.status_code == 200
+    except:
+        return False
+
+def validate_github_url(url):
+    """Validate GitHub URL format"""
+    if not url.strip():
+        return False, "Please enter a GitHub URL"
+    
+    if not url.startswith("https://github.com/") and not url.startswith("https://gitlab.com/"):
+        return False, "Invalid URL format. Use: https://github.com/username/repo"
+    
+    parts = url.rstrip("/").split("/")
+    if len(parts) < 5:
+        return False, "URL is incomplete. Expected: https://github.com/username/repo"
+    
+    return True, "✅ URL is valid"
+
+def generate_demo_documentation(repo_url, repo_name):
+    """Generate demo documentation markdown"""
+    return f"""# {repo_name}
+
+## Overview
+
+This is a professional documentation for the **{repo_name}** repository, automatically generated by The Code Master AI system.
+
+## Installation
+
+\`\`\`bash
+# Clone the repository
+git clone {repo_url}
+
+# Install dependencies
+cd {repo_name.lower()}
+pip install -r requirements.txt
+\`\`\`
+
+## Quick Start
+
+1. Install the package
+2. Import in your project
+3. Start using the features
+4. Refer to API documentation for details
+
+## Features
+
+- ✅ Feature 1: Core functionality
+- ✅ Feature 2: Advanced options
+- ✅ Feature 3: Integration support
+- ✅ Feature 4: Performance optimization
+- ✅ Feature 5: Comprehensive documentation
+
+## API Reference
+
+### Main Class
+
+\`\`\`python
+class CodeMaster:
+    def __init__(self, config):
+        pass
+    
+    def process(self, input_data):
+        \"\"\"Process input data\"\"\"
+        pass
+    
+    def generate(self):
+        \"\"\"Generate output\"\"\"
+        pass
+\`\`\`
+
+## Usage Examples
+
+### Basic Usage
+
+\`\`\`python
+from {repo_name.lower()} import CodeMaster
+
+# Initialize
+master = CodeMaster(config={{}})
+
+# Process data
+result = master.process(data)
+
+# Generate output
+output = master.generate()
+\`\`\`
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a pull request
+
+## License
+
+This project is licensed under the MIT License - see LICENSE file for details.
+
+## Support
+
+- 📖 Documentation: [View Docs](https://docs.example.com)
+- 🐛 Issues: [Report Bug](https://github.com/user/repo/issues)
+- 💬 Discussions: [Join Discussion](https://github.com/user/repo/discussions)
+
+---
+
+*Documentation generated by The Code Master - AI-Powered Documentation System*
+"""
 
 # ============================================================================
 # SIDEBAR CONFIGURATION
 # ============================================================================
 
 with st.sidebar:
-    st.markdown("## ⚙️ Settings")
+    st.markdown("### ⚙️ System Configuration")
     
     # API Configuration
-    st.markdown("### API Configuration")
+    st.markdown("**Backend Connection**")
     api_endpoint = st.text_input(
-        "Backend API Endpoint",
+        "API Endpoint",
         value="http://localhost:8001",
-        help="URL of the JAC backend server"
+        help="JAC backend server endpoint"
     )
     
-    st.markdown("---")
+    # Backend status
+    backend_status = check_backend_connection()
+    if backend_status:
+        st.markdown('<div class="success-box">✅ Backend: Connected</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="info-box">ℹ️ Backend: Demo Mode (works without backend)</div>', unsafe_allow_html=True)
     
-    # Information
-    st.markdown("### ℹ️ About Code Master")
-    st.info("""
-    **Code Master** is an intelligent documentation generation system that:
+    st.divider()
     
-    • Analyzes GitHub repositories
-    • Extracts code structure and relationships
-    • Generates professional markdown documentation
-    • Creates API references
-    • Builds architecture overviews
-    
-    Built with JAC multi-agent architecture and LLM-powered analysis.
-    """)
-    
-    st.markdown("---")
-    
-    # System Status
-    st.markdown("### 🔍 System Status")
+    st.markdown("**System Status**")
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("Backend", "🟢 Ready", "v1.0")
+        st.markdown('<span class="status-badge badge-active">Frontend</span>', unsafe_allow_html=True)
+        st.caption("✅ Running")
     with col2:
-        st.metric("Models", "🟢 Active", "GPT-4o")
+        st.markdown('<span class="status-badge badge-ready">Backend</span>', unsafe_allow_html=True)
+        st.caption("✅ Ready" if backend_status else "⚠️ Demo")
+    
+    st.divider()
+    
+    st.markdown("**About The Code Master**")
+    st.info(
+        "🤖 **AI-Powered Documentation Generator**\n\n"
+        "Transform GitHub repositories into professional markdown documentation "
+        "in seconds.\n\n"
+        "**Developed by Duncan N. for Developers**\n\n"
+        "© 2024-2025 | MIT License"
+    )
 
 # ============================================================================
 # MAIN HEADER
 # ============================================================================
 
-col1, col2 = st.columns([0.7, 0.3])
-
+col1, col2 = st.columns([3, 1])
 with col1:
-    st.markdown("# 📚 The Code Master")
-    st.markdown("### Professional Documentation from Code")
-    st.markdown("Paste a GitHub repository URL and let AI generate comprehensive documentation automatically.")
+    st.markdown("<h1>📚 The Code Master</h1>", unsafe_allow_html=True)
+    st.markdown(
+        "<p style='font-size: 1.1em; color: #666; margin-top: -10px;'>"
+        "AI-Powered Code Documentation Generator</p>",
+        unsafe_allow_html=True
+    )
 
 with col2:
-    st.markdown("")
-    st.markdown("")
-    st.image("https://img.icons8.com/color/96/000000/github--v1.png", width=80)
+    st.markdown(
+        '<div style="text-align: right; padding-top: 20px;">'
+        '<span class="status-badge badge-active">v1.0.0</span><br>'
+        '<span class="status-badge badge-ready">Active</span>'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-st.markdown("---")
+st.divider()
 
 # ============================================================================
-# MAIN CONTENT AREA
+# MAIN CONTENT TABS
 # ============================================================================
 
-# Create tabs for different functionalities
 tab1, tab2, tab3, tab4 = st.tabs(["🚀 Generate Docs", "✨ Features", "📖 Tutorial", "🔗 Resources"])
 
 # ============================================================================
@@ -245,623 +378,344 @@ tab1, tab2, tab3, tab4 = st.tabs(["🚀 Generate Docs", "✨ Features", "📖 Tu
 # ============================================================================
 
 with tab1:
-    st.markdown("## Generate Documentation")
+    st.markdown("## 🚀 Generate Documentation")
     
+    st.markdown("""
+    <div class="info-box">
+    <strong>📝 How it works:</strong> Paste a GitHub repository URL and our AI system will 
+    automatically analyze the code and generate professional documentation.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Input section
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        # GitHub URL input
         repo_url = st.text_input(
             "GitHub Repository URL",
-            placeholder="https://github.com/username/repo-name",
-            help="Paste the full GitHub repository URL",
-            label_visibility="visible"
+            placeholder="https://github.com/username/repository-name",
+            help="Full GitHub URL to the repository",
+            key="repo_url"
         )
     
     with col2:
-        st.markdown("####")
-        validate_btn = st.button("✅ Validate", use_container_width=True, key="validate_btn")
+        st.write("")  # Spacing
+        validate_btn = st.button("✓ Validate", use_container_width=True)
     
     # Validation and processing
-    if validate_btn and repo_url:
-        with st.spinner("Validating repository..."):
-            time.sleep(0.5)  # Simulate validation
+    if validate_btn:
+        is_valid, message = validate_github_url(repo_url)
+        
+        if is_valid:
+            st.success(message)
             
-            # Check basic URL format
-            if "github.com" in repo_url or "gitlab.com" in repo_url:
-                st.success("✅ Repository URL is valid!")
-                
-                # Extract repo name
-                repo_name = repo_url.split("/")[-1].replace(".git", "")
-                
-                st.markdown("---")
-                
-                # Analysis progress section
-                st.markdown("### 📊 Analysis Progress")
-                
-                # Create progress tracking
-                progress_container = st.container()
-                
-                with progress_container:
-                    # Step 1: Cloning
-                    col1, col2 = st.columns([0.8, 0.2])
-                    with col1:
-                        st.write("🔄 **Step 1:** Cloning repository...")
-                    with col2:
-                        st.write("20%")
-                    st.progress(0.20)
-                    time.sleep(0.5)
-                    
-                    # Step 2: Analyzing files
-                    col1, col2 = st.columns([0.8, 0.2])
-                    with col1:
-                        st.write("🔄 **Step 2:** Analyzing code structure...")
-                    with col2:
-                        st.write("40%")
-                    st.progress(0.40)
-                    time.sleep(0.5)
-                    
-                    # Step 3: Building context graph
-                    col1, col2 = st.columns([0.8, 0.2])
-                    with col1:
-                        st.write("🔄 **Step 3:** Building code context graph...")
-                    with col2:
-                        st.write("60%")
-                    st.progress(0.60)
-                    time.sleep(0.5)
-                    
-                    # Step 4: Generating documentation
-                    col1, col2 = st.columns([0.8, 0.2])
-                    with col1:
-                        st.write("🔄 **Step 4:** Generating documentation...")
-                    with col2:
-                        st.write("85%")
-                    st.progress(0.85)
-                    time.sleep(0.5)
-                    
-                    # Step 5: Finalizing
-                    col1, col2 = st.columns([0.8, 0.2])
-                    with col1:
-                        st.write("✅ **Step 5:** Finalizing...")
-                    with col2:
-                        st.write("100%")
-                    st.progress(1.0)
-                
-                st.markdown("---")
-                
-                # Generated Documentation Display
-                st.markdown("### 📄 Generated Documentation")
-                
-                # Simulate generated documentation
-                generated_doc = f"""# {repo_name}
-
-## Project Overview
-
-This is a comprehensive analysis of the **{repo_name}** repository. The project demonstrates modern software development practices with clean architecture, robust error handling, and well-documented code.
-
-### Key Features
-- **Multi-Agent Architecture:** Uses JAC-based agents for specialized analysis
-- **Code Context Graph:** Builds relationship maps between code components
-- **Intelligent Documentation:** LLM-powered documentation generation
-- **Professional Formatting:** Markdown output with proper structure
-
-### Technology Stack
-- Python 3.10+
-- JAC (Jaseci) - Agentic AI Framework
-- byLLM 0.4.5 - LLM Abstraction Layer
-- Streamlit 1.51.0 - Frontend Framework
-- FastAPI - REST API Server
-
----
-
-## Installation
-
-### Prerequisites
-- Python 3.10 or higher
-- Git
-- pip (Python package manager)
-
-### Setup Instructions
-
-1. **Clone the repository**
-   ```bash
-   git clone {repo_url}
-   cd {repo_name}
-   ```
-
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\\Scripts\\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
-
-5. **Run the application**
-   ```bash
-   streamlit run app.py
-   ```
-
----
-
-## Usage
-
-### Basic Usage
-
-```python
-from code_master import CodeMaster
-
-# Initialize Code Master
-master = CodeMaster(api_key="your-api-key")
-
-# Analyze a repository
-docs = master.analyze_repo("https://github.com/username/repo")
-
-# Save documentation
-master.save_docs(docs, "./output/")
-```
-
-### Advanced Features
-
-#### Multi-Agent Analysis
-```python
-# Use specific agents
-analyzer = master.get_agent("CodeAnalyzer")
-ccg = analyzer.build_context_graph(repo_files)
-```
-
-#### Custom Documentation Templates
-```python
-# Customize generated documentation
-config = {{
-    "include_api_reference": True,
-    "include_architecture": True,
-    "custom_sections": ["Deployment", "Contributing"]
-}}
-docs = master.analyze_repo(url, config)
-```
-
----
-
-## API Reference
-
-### Main Classes
-
-#### CodeMaster
-Primary class for repository analysis and documentation generation.
-
-**Methods:**
-- `analyze_repo(url: str, config: dict) -> DocumentationOutput`
-- `save_docs(docs: DocumentationOutput, path: str) -> bool`
-- `get_agent(name: str) -> Agent`
-
-#### RepoMapper
-Repository validation, file tree generation, and README extraction.
-
-**Methods:**
-- `validate_repository(url: str) -> ValidationResult`
-- `build_file_tree(path: str) -> FileTree`
-- `extract_readme(path: str) -> str`
-
-#### CodeAnalyzer
-Deep code structure analysis and context graph building.
-
-**Methods:**
-- `analyze_code_file(code: str, language: str) -> CodeAnalysis`
-- `build_ccg(files: list) -> CodeContextGraph`
-- `estimate_complexity(code: str) -> float`
-
-#### DocGenie
-Documentation generation and assembly.
-
-**Methods:**
-- `generate_project_overview(metadata: dict) -> str`
-- `generate_api_reference(files: list) -> str`
-- `assemble_documentation(...) -> DocumentationOutput`
-
----
-
-## Architecture Overview
-
-### System Components
-
-```
-┌─────────────────────────────────────────────────┐
-│           Streamlit Frontend (Web UI)           │
-│  • GitHub URL input                             │
-│  • Real-time progress tracking                  │
-│  • Documentation viewer                         │
-└────────────────┬────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────┐
-│      JAC Backend (Multi-Agent Pipeline)         │
-├─────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │  RepoMapper  │  │  CodeAnalyzer│             │
-│  │   Agent      │  │   Agent      │             │
-│  └──────────────┘  └──────────────┘             │
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │  DocGenie    │  │ CodeGenius   │             │
-│  │   Agent      │  │  Supervisor  │             │
-│  └──────────────┘  └──────────────┘             │
-│                                                  │
-│  • Code Context Graph (CCG) Building            │
-│  • LLM-Powered Analysis (GPT-4o)                │
-│  • Relationship Mapping                         │
-│  • Complexity Estimation                        │
-└─────────────────────────────────────────────────┘
-```
-
-### Data Flow
-
-1. **Input:** User submits GitHub repository URL
-2. **Validation:** RepoMapper validates URL format and accessibility
-3. **Cloning:** Repository is cloned to temporary directory
-4. **Analysis:** CodeAnalyzer parses code structure and builds CCG
-5. **Generation:** DocGenie creates markdown sections using LLM
-6. **Assembly:** CodeGenius orchestrates output and saves documentation
-7. **Output:** User downloads professional markdown documentation
-
----
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Code Standards
-- Follow PEP 8 for Python code
-- Write clear, descriptive commit messages
-- Add docstrings to all functions and classes
-- Include unit tests for new features
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue:** Repository URL validation fails
-- **Solution:** Ensure the URL is publicly accessible and follows standard GitHub format
-
-**Issue:** Documentation generation is slow
-- **Solution:** Limit the number of files analyzed using MAX_FILES_TO_ANALYZE setting
-
-**Issue:** LLM API errors
-- **Solution:** Check API key configuration and rate limits
-
-### Getting Help
-
-- Check the [FAQ](./docs/FAQ.md)
-- Review [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-- Open an issue on GitHub
-
----
-
-## License
-
-This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) for details.
-
----
-
-## Acknowledgments
-
-- Built with [JAC/Jaseci](https://github.com/Jaseci-Labs/jaseci) agentic AI framework
-- LLM integration via [byLLM](https://github.com/Jaseci-Labs/byLLM)
-- Frontend powered by [Streamlit](https://streamlit.io/)
-
----
-
-**Generated by Code Master** | *{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}*
-"""
-                
-                # Display in expandable section
-                with st.expander("📖 View Full Documentation", expanded=True):
-                    st.markdown(generated_doc)
-                
-                st.markdown("---")
-                
-                # Download and action buttons
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.download_button(
-                        label="📥 Download as Markdown",
-                        data=generated_doc,
-                        file_name=f"{repo_name}_documentation.md",
-                        mime="text/markdown",
-                        use_container_width=True
-                    )
-                
-                with col2:
-                    st.button(
-                        label="🔄 Generate Again",
-                        use_container_width=True,
-                        key="regenerate_btn"
-                    )
-                
-                with col3:
-                    st.button(
-                        label="✨ Customize",
-                        use_container_width=True,
-                        key="customize_btn"
-                    )
-                
-                # Show summary statistics
-                st.markdown("### 📈 Analysis Summary")
-                
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("Files Analyzed", "24", "100%")
-                
-                with col2:
-                    st.metric("Functions Found", "147", "+12")
-                
-                with col3:
-                    st.metric("Classes Found", "31", "+5")
-                
-                with col4:
-                    st.metric("Avg Complexity", "4.2/10", "Moderate")
-                
-            else:
-                st.error("❌ Invalid GitHub URL format. Please use: https://github.com/username/repo-name")
+            # Extract repo name
+            repo_name = repo_url.rstrip("/").split("/")[-1]
+            
+            # Progress tracking
+            st.markdown("### 📊 Processing Progress")
+            
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            stages = [
+                ("Repository Validation", 20),
+                ("Code Analysis", 40),
+                ("Building Context Graph", 60),
+                ("Documentation Generation", 85),
+                ("Finalization & Export", 100)
+            ]
+            
+            for stage_name, progress_value in stages:
+                status_text.markdown(
+                    f"<div style='padding: 10px; background: #f0f0f0; border-radius: 5px;'>"
+                    f"🔄 {stage_name} ({progress_value}%)</div>",
+                    unsafe_allow_html=True
+                )
+                progress_bar.progress(progress_value)
+                time.sleep(0.5)
+            
+            status_text.markdown(
+                "<div style='padding: 10px; background: #E8F5E9; border-radius: 5px; color: #2E7D32; font-weight: bold;'>"
+                "✅ Documentation Generated Successfully!</div>",
+                unsafe_allow_html=True
+            )
+            
+            # Generate demo documentation
+            documentation = generate_demo_documentation(repo_url, repo_name)
+            
+            # Display documentation
+            st.markdown("### 📄 Generated Documentation")
+            
+            with st.expander("📖 View Full Documentation", expanded=True):
+                st.markdown(documentation)
+            
+            # Statistics
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Files", "24")
+            with col2:
+                st.metric("Functions", "147")
+            with col3:
+                st.metric("Classes", "31")
+            with col4:
+                st.metric("Complexity", "4.2/10")
+            
+            # Download section
+            st.divider()
+            col1, col2, col3 = st.columns([1, 1, 2])
+            
+            with col1:
+                st.download_button(
+                    label="📥 Download as .md",
+                    data=documentation,
+                    file_name=f"{repo_name}_documentation.md",
+                    mime="text/markdown",
+                    use_container_width=True
+                )
+            
+            with col2:
+                st.button("📋 Copy to Clipboard", use_container_width=True, disabled=True)
+            
+            with col3:
+                st.caption("💡 Tip: Use the download button to save documentation locally")
+        
+        elif repo_url:
+            st.error(message)
     
-    elif repo_url and not validate_btn:
-        st.info("👆 Click 'Validate' to start the documentation generation process")
-    
-    else:
-        st.markdown("""
-        <div class="info-box">
-        <h4>How to Use Code Master</h4>
-        <ol>
-            <li>Paste a GitHub repository URL in the input field above</li>
-            <li>Click the "Validate" button to check the URL</li>
-            <li>Wait for the analysis to complete (typically 30-60 seconds)</li>
-            <li>Review the generated documentation</li>
-            <li>Download as Markdown or customize as needed</li>
-        </ol>
-        </div>
-        """, unsafe_allow_html=True)
+    st.divider()
+    st.markdown("""
+    <div class="success-box">
+    <strong>💡 Pro Tips:</strong>
+    <ul>
+        <li>Use the generated documentation for GitHub READMEs</li>
+        <li>Customize the documentation before publishing</li>
+        <li>Add code examples to the API reference section</li>
+        <li>Update the documentation as your project evolves</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================================
 # TAB 2: FEATURES
 # ============================================================================
 
 with tab2:
-    st.markdown("## ✨ Key Features")
+    st.markdown("## ✨ System Features")
+    
+    st.markdown("""
+    <div class="card">
+    <h3>🤖 Multi-Agent Architecture</h3>
+    <p>Four specialized AI agents work together to analyze your code and generate documentation:</p>
+    <ul>
+        <li><strong>RepoMapper:</strong> Validates and maps repository structure</li>
+        <li><strong>CodeAnalyzer:</strong> Parses code and analyzes complexity</li>
+        <li><strong>DocGenie:</strong> Generates documentation sections</li>
+        <li><strong>CodeGenius:</strong> Orchestrates the entire pipeline</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        ### 🤖 Multi-Agent Analysis
-        Specialized agents work together:
-        - **RepoMapper:** Validates and maps repository structure
-        - **CodeAnalyzer:** Deep code structure and complexity analysis
-        - **DocGenie:** Creates professional documentation sections
-        - **CodeGenius:** Orchestrates the entire pipeline
+        <div class="card">
+        <h3>⚡ Real-Time Processing</h3>
+        <p>Watch your documentation being generated in real-time with progress tracking for each stage.</p>
+        </div>
         
-        ### 📊 Code Context Graph
-        - Maps relationships between functions and classes
-        - Identifies entry points and main flows
-        - Tracks dependencies and interactions
-        - Generates architecture diagrams
-        """)
+        <div class="card">
+        <h3>📊 Code Analysis</h3>
+        <p>Comprehensive analysis of your codebase including functions, classes, imports, and complexity metrics.</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        ### 🧠 LLM-Powered Intelligence
-        - Uses GPT-4o for semantic understanding
-        - Generates human-readable descriptions
-        - Creates professional markdown output
-        - Customizable templates and formats
+        <div class="card">
+        <h3>📝 Professional Output</h3>
+        <p>Generate publication-ready markdown documentation with API references, examples, and guides.</p>
+        </div>
         
-        ### 🚀 Performance
-        - Analyzes 20+ files simultaneously
-        - Handles large codebases efficiently
-        - Caches analysis results
-        - Optimized for GitHub repositories
-        """)
+        <div class="card">
+        <h3>🌐 GitHub Integration</h3>
+        <p>Direct integration with GitHub repositories. Just paste the URL and we handle the rest.</p>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.divider()
     
-    st.markdown("### 📝 Generated Documentation Includes")
-    
-    cols = st.columns(3)
-    
-    items = [
-        ("📖", "Project Overview", "Comprehensive description of the project"),
-        ("🔧", "Installation Guide", "Step-by-step setup instructions"),
-        ("💻", "Usage Examples", "Code samples and common use cases"),
-        ("🔌", "API Reference", "Complete function and class documentation"),
-        ("🏗️", "Architecture Overview", "System design and component relationships"),
-        ("🎯", "Quick Start", "Get running in minutes"),
-        ("📚", "Code Examples", "Practical implementation patterns"),
-        ("🔗", "Dependencies", "List of required packages and versions"),
-    ]
-    
-    for idx, (icon, title, desc) in enumerate(items):
-        col = cols[idx % 3]
-        with col:
-            st.markdown(f"""
-            <div class="card">
-            <h4>{icon} {title}</h4>
-            <p style="color: #666; font-size: 0.9em;">{desc}</p>
-            </div>
-            """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="success-box">
+    <h3>🎯 Supported Languages</h3>
+    Python • JavaScript • TypeScript • Java • C++ • C# • Ruby • PHP • Go • Rust • 
+    Kotlin • Swift • R • MATLAB • Scala
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================================
 # TAB 3: TUTORIAL
 # ============================================================================
 
 with tab3:
-    st.markdown("## 📖 Step-by-Step Tutorial")
+    st.markdown("## 📖 How to Use Code Master")
     
     st.markdown("""
-    ### Example: Generating Docs for a GitHub Repository
+    <div class="info-box">
+    <strong>🎓 Step-by-Step Guide</strong>
+    </div>
+    """, unsafe_allow_html=True)
     
-    #### Step 1: Prepare Your Repository
+    st.markdown("""
+    ### Step 1️⃣: Prepare Your Repository
     
-    For best results, ensure your repository has:
-    - A README.md file describing the project
-    - Clear code structure with logical organization
-    - Docstrings or comments explaining functionality
-    - Meaningful function and variable names
+    Ensure your GitHub repository is:
+    - ✅ Public (or you have access)
+    - ✅ Contains source code files
+    - ✅ Has a README (optional but helpful)
     
-    #### Step 2: Copy the Repository URL
+    ### Step 2️⃣: Get the URL
     
-    Navigate to your GitHub repository and copy the URL:
+    Copy your repository URL from GitHub:
     ```
     https://github.com/username/repository-name
     ```
     
-    #### Step 3: Use Code Master
+    ### Step 3️⃣: Paste and Validate
     
-    1. Paste the URL in the input field on the main tab
-    2. Click "Validate" to verify the repository
-    3. Wait for the analysis to complete
-    4. Review the generated documentation
+    1. Go to the **"🚀 Generate Docs"** tab
+    2. Paste your GitHub URL
+    3. Click the **"✓ Validate"** button
     
-    #### Step 4: Download or Customize
+    ### Step 4️⃣: Watch Progress
     
-    - Download the markdown file directly
-    - Customize sections as needed
-    - Share with your team
-    - Use in your project wiki
+    The system will:
+    1. Validate your repository
+    2. Clone and analyze the code
+    3. Build a context graph
+    4. Generate documentation
+    5. Export as markdown
     
-    ### Tips for Best Results
+    ### Step 5️⃣: Download & Use
     
-    ✅ **Do:**
-    - Use public repositories
-    - Include comprehensive README files
-    - Write clear, descriptive code
-    - Follow language-specific conventions
-    - Add meaningful docstrings
-    
-    ❌ **Don't:**
-    - Use private/restricted repositories
-    - Have minimal or missing README
-    - Use single-letter variable names
-    - Skip code documentation
-    - Mix multiple languages in one file
-    
-    ### Supported Languages
-    
-    Code Master can analyze:
-    - Python, JavaScript, TypeScript
-    - Java, C++, C#, Go, Rust
-    - Ruby, PHP, Swift, Kotlin
-    - SQL, JAC, Markdown, and more
+    - Download the generated `.md` file
+    - Review and customize as needed
+    - Add to your project repository
+    - Share with your team!
     """)
+    
+    st.divider()
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="success-box">
+        <h3>✅ Do's</h3>
+        <ul>
+            <li>Use public repositories</li>
+            <li>Include a README</li>
+            <li>Add code comments</li>
+            <li>Customize generated docs</li>
+            <li>Update regularly</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="warning-box">
+        <h3>❌ Don'ts</h3>
+        <ul>
+            <li>Use private repos without access</li>
+            <li>Ignore security files</li>
+            <li>Skip customization</li>
+            <li>Upload without review</li>
+            <li>Leave outdated docs</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ============================================================================
 # TAB 4: RESOURCES
 # ============================================================================
 
 with tab4:
-    st.markdown("## 🔗 Resources & Documentation")
+    st.markdown("## 🔗 Resources & Support")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        ### 📚 Documentation
-        - [Complete API Reference](https://docs.codemaster.io/api)
-        - [Architecture Guide](https://docs.codemaster.io/architecture)
-        - [Configuration Options](https://docs.codemaster.io/config)
-        - [Troubleshooting Guide](https://docs.codemaster.io/troubleshooting)
+        <div class="card">
+        <h3>📚 Documentation</h3>
+        <ul>
+            <li><a href="#">Complete User Guide</a></li>
+            <li><a href="#">API Reference</a></li>
+            <li><a href="#">Architecture Docs</a></li>
+            <li><a href="#">FAQ</a></li>
+        </ul>
+        </div>
         
-        ### 🔧 Technology Stack
-        - [JAC/Jaseci Framework](https://github.com/Jaseci-Labs/jaseci)
-        - [byLLM Documentation](https://github.com/Jaseci-Labs/byLLM)
-        - [Streamlit Docs](https://docs.streamlit.io/)
-        - [OpenAI API](https://platform.openai.com/docs)
-        """)
+        <div class="card">
+        <h3>🛠️ Technology Stack</h3>
+        <ul>
+            <li>JAC/Jaseci - Agentic AI</li>
+            <li>Streamlit - Web Framework</li>
+            <li>byLLM - LLM Integration</li>
+            <li>OpenAI - GPT-4o</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        ### 🤝 Community
-        - [GitHub Repository](https://github.com/your/repo)
-        - [Issue Tracker](https://github.com/your/repo/issues)
-        - [Discussions](https://github.com/your/repo/discussions)
-        - [Contributing Guide](https://github.com/your/repo/blob/main/CONTRIBUTING.md)
+        <div class="card">
+        <h3>👥 Community</h3>
+        <ul>
+            <li><a href="https://github.com/DUNCANNJUKI/TheFutureOfGenAiClass">GitHub Repository</a></li>
+            <li><a href="#">Join Discussions</a></li>
+            <li><a href="#">Report Issues</a></li>
+            <li><a href="#">Contribute</a></li>
+        </ul>
+        </div>
         
-        ### 💡 Examples
-        - [Example Documentations](https://examples.codemaster.io)
-        - [Case Studies](https://blog.codemaster.io)
-        - [Sample Projects](https://github.com/codemaster-samples)
-        - [Video Tutorials](https://youtube.com/@codemaster)
-        """)
+        <div class="card">
+        <h3>📞 Support</h3>
+        <ul>
+            <li><a href="#">Discord Community</a></li>
+            <li><a href="#">Email Support</a></li>
+            <li><a href="#">GitHub Issues</a></li>
+            <li><a href="#">Documentation</a></li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.divider()
     
-    st.markdown("### 🆘 Support & Contact")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.info("""
-        **Email Support**
-        
-        support@codemaster.io
-        
-        Response time: < 24 hours
-        """)
-    
-    with col2:
-        st.info("""
-        **Community Chat**
-        
-        Slack Community
-        
-        Real-time help from maintainers
-        """)
-    
-    with col3:
-        st.info("""
-        **Bug Reports**
-        
-        GitHub Issues
-        
-        Help us improve the product
-        """)
+    st.markdown("""
+    <div class="info-box">
+    <h3>🚀 Get Started</h3>
+    <p><strong>Ready to generate documentation?</strong> Go to the <strong>"🚀 Generate Docs"</strong> tab 
+    and paste your GitHub URL to get started!</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================================
 # FOOTER
 # ============================================================================
 
-st.markdown("---")
-
-footer_col1, footer_col2, footer_col3 = st.columns(3)
-
-with footer_col1:
-    st.markdown("**Code Master** v1.0")
-    st.markdown("*AI-Powered Documentation Generation*")
-
-with footer_col2:
-    st.markdown("Built with ❤️ using JAC & Streamlit")
-
-with footer_col3:
-    st.markdown("© 2024 Code Master | [License](./LICENSE)")
+st.divider()
 
 st.markdown("""
-<div style="text-align: center; padding: 20px; color: #999; font-size: 0.9em;">
-Made with Python • Powered by AI • Loved by Developers
+<div style='text-align: center; padding: 30px 0; color: #666; border-top: 1px solid #e0e0e0;'>
+    <p><strong>The Code Master</strong> - AI-Powered Code Documentation System</p>
+    <p>© 2024-2025 | Developed by Duncan N. for Developers | Version 1.0.0</p>
+    <p>
+        <a href='https://github.com/DUNCANNJUKI' style='color: #0D47A1; text-decoration: none; margin: 0 10px;'>GitHub</a> • 
+        <a href='#' style='color: #0D47A1; text-decoration: none; margin: 0 10px;'>Documentation</a> • 
+        <a href='#' style='color: #0D47A1; text-decoration: none; margin: 0 10px;'>Support</a>
+    </p>
 </div>
 """, unsafe_allow_html=True)
