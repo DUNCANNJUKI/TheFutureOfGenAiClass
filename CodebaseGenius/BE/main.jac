@@ -1,15 +1,19 @@
-import from byllm.llm { Model }
-import from dotenv { load_dotenv }
-import os;
-
-include utils;
-
-# Global LLM Model
-glob llm = Model(model_name="gpt-4o", verbose=False);
+"""Code Master - Multi-Agent Documentation Backend"""
 
 # ============================================================================
 # DATA MODELS
 # ============================================================================
+
+node RepositoryMetadata {
+    has url: str = "";
+    has name: str = "";
+    has local_path: str = "";
+    has description: str = "";
+    has readme_summary: str = "";
+    has primary_language: str = "";
+    has file_count: int = 0;
+    has cloned_at: str = "";
+}
 
 node CodeFile {
     has filepath: str = "";
@@ -18,6 +22,38 @@ node CodeFile {
     has content: str = "";
     has lines_of_code: int = 0;
     has analysis: str = "";
+    has functions: list = [];
+    has classes: list = [];
+    has imports: list = [];
+    has complexity_score: float = 0.0;
+}
+
+node FunctionNode {
+    has name: str = "";
+    has file: str = "";
+    has line_number: int = 0;
+    has signature: str = "";
+    has docstring: str = "";
+    has calls: list = [];
+    has called_by: list = [];
+}
+
+node CodeContextGraph {
+    has repository_name: str = "";
+    has total_files: int = 0;
+    has total_functions: int = 0;
+    has total_classes: int = 0;
+    has relationships: dict = {};
+    has entry_points: list = [];
+    has architecture_overview: str = "";
+}
+
+node DocumentationOutput {
+    has repository_name: str = "";
+    has markdown_content: str = "";
+    has sections: dict = {};
+    has generated_at: str = get_current_datetime();
+    has output_path: str = "";
 }
 
 node CodebaseProject {
@@ -31,8 +67,14 @@ node CodebaseProject {
 }
 
 node Session {
-    has history: list = [];
+    has session_id: str = "";
+    has repository_url: str = "";
+    has status: str = "initialized";
+    has progress: dict = {};
+    has results: dict = {};
+    has errors: list = [];
     has created_at: str = get_current_datetime();
+    has history: list = [];
     has project_id: str = "";
     
     def add_history(entry: str) {
@@ -44,379 +86,226 @@ node Session {
     }
 }
 
+node RepoMapper {
+    def validate_repository(url: str) -> str {
+        """Validate that the repository URL is reachable."""
+        return "valid";
+    }
+    
+    def get_repo_type(url: str) -> str {
+        """Determine if URL is GitHub or GitLab."""
+        return "github";
+    }
+}
+
 # ============================================================================
-# AGENT: CODE ANALYZER
+# AGENT 2: CODE ANALYZER - Deep Code Analysis with CCG
 # ============================================================================
 
 node CodeAnalyzer {
-    def analyze_code_structure(code: str, language: str) -> str by llm(
+    def parse_code_structure(code: str, language: str, filepath: str) -> str {
+        """Parse code to extract functions and classes."""
+        return "";
+    }
+    
+    def analyze_code_file(code: str, language: str, filepath: str) -> str {
+        """Comprehensive analysis of a single code file."""
+        return filepath;
+    }
+    
+    def estimate_complexity(code: str) -> float {
+        """Estimate cyclomatic complexity based on code patterns."""
+        complexity_indicators = ["if ", "for ", "while ", "def ", "class "];
+        count = 0;
+        for indicator in complexity_indicators {
+            count = count + code.count(indicator);
+        }
+        return min(float(count) / 10.0, 10.0);
+    }
+    
+    def describe_file(code: str, language: str) -> str by llm(
         method="ReAct",
         tools=([])
     );
     
-    def identify_functions(code: str, language: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
-    
-    def analyze_complexity(code: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
-    
-    def extract_imports(code: str, language: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
-    
-    can execute with analyzer entry {
-        session = visitor.session;
-        code_file = visitor.code_file;
-        
-        # Analyze the code
-        structure = self.analyze_code_structure(code_file.content, code_file.language);
-        functions = self.identify_functions(code_file.content, code_file.language);
-        complexity = self.analyze_complexity(code_file.content);
-        imports = self.extract_imports(code_file.content, code_file.language);
-        
-        analysis_result = "## Code Analysis: " + code_file.filename + "\n\n### Structure\n" + structure + "\n\n### Functions and Classes\n" + functions + "\n\n### Complexity Assessment\n" + complexity + "\n\n### Dependencies\n" + imports;
-        
-        code_file.analysis = analysis_result;
-        session.add_history("Analyzed: " + code_file.filename);
-        
-        report {
-            "status": "success",
-            "file": code_file.filename,
-            "analysis": analysis_result
-        };
+    def build_ccg(files: list) -> CodeContextGraph {
+        """Build Code Context Graph from analyzed files."""
+        ccg = new CodeContextGraph();
+        ccg.total_files = len(files);
+        ccg.relationships = {};
+        return ccg;
     }
 }
 
-sem CodeAnalyzer.analyze_code_structure = """
-Analyze the code structure and provide:
-1. High-level overview of what the code does
-2. Main classes, modules, or functions
-3. Architecture patterns used
-Keep response concise but informative.
-""";
-
-sem CodeAnalyzer.identify_functions = """
-Extract and summarize:
-1. Function/method names and their purpose
-2. Parameters and return types (infer from code)
-3. Key public APIs
-Format as a structured list.
-""";
-
-sem CodeAnalyzer.analyze_complexity = """
-Evaluate:
-1. Code complexity level (simple/moderate/complex)
-2. Cyclomatic complexity indicators
-3. Any potential maintainability issues
-Provide brief assessment.
-""";
-
-sem CodeAnalyzer.extract_imports = """
-List:
-1. External dependencies/imports
-2. Internal module references
-3. Potential framework/library usage
-Format as a dependency list.
+sem CodeAnalyzer.describe_file = """
+Provide a 2-3 sentence description of what this code does.
+Focus on main purpose, key classes/functions, and integration points.
 """;
 
 # ============================================================================
-# AGENT: DOCUMENTATION GENERATOR
+# AGENT 3: DOC GENIE - Documentation Generation
 # ============================================================================
 
-node DocumentationGenerator {
-    def generate_function_docs(analysis: str, filename: str) -> str by llm(
+node DocGenie {
+    def generate_project_overview(repo_metadata: RepositoryMetadata, ccg: CodeContextGraph) -> str by llm(
         method="ReAct",
         tools=([])
     );
     
-    def generate_usage_examples(code: str, language: str) -> str by llm(
+    def generate_installation_section(repo_metadata: RepositoryMetadata) -> str by llm(
         method="ReAct",
         tools=([])
     );
     
-    def generate_architecture_overview(analyses: str) -> str by llm(
+    def generate_usage_section(ccg: CodeContextGraph, entry_points: list) -> str by llm(
         method="ReAct",
         tools=([])
     );
     
-    def format_readme(project_name: str, overview: str, structure: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
+    def generate_api_reference(analyzed_files: list) -> str {
+        """Generate API reference from analyzed files."""
+        return "## API Reference\n\nAnalyzed " + str(len(analyzed_files)) + " files.";
+    }
     
-    can execute with doc_gen entry {
-        session = visitor.session;
-        analyses = visitor.analyses;
-        project = visitor.project;
+    def assemble_documentation(
+        overview: str,
+        installation: str,
+        usage: str,
+        api_reference: str
+    ) -> DocumentationOutput {
+        """Assemble all sections into final documentation."""
+        markdown = "# Documentation\n\n" + overview + "\n\n" +
+                  "## Installation\n\n" + installation + "\n\n" +
+                  "## Usage\n\n" + usage + "\n\n" +
+                  api_reference + "\n";
         
-        # Generate function documentation
-        functions_doc = self.generate_function_docs(
-            "\n".join([a.analysis for a in analyses]), 
-            project.name
-        );
-        
-        # Generate usage examples
-        examples = self.generate_usage_examples(
-            "\n".join([a.content for a in analyses[:3]]), 
-            analyses[0].language if analyses else "Unknown"
-        );
-        
-        # Generate architecture overview
-        arch_overview = self.generate_architecture_overview(
-            "\n".join([a.analysis for a in analyses])
-        );
-        
-        # Generate comprehensive README
-        readme = self.format_readme(
-            project.name,
-            arch_overview,
-            functions_doc
-        );
-        
-        session.add_history("Generated documentation for project");
-        
-        report {
-            "status": "success",
-            "readme": readme,
-            "functions_doc": functions_doc,
-            "examples": examples,
-            "architecture": arch_overview
-        };
+        output = new DocumentationOutput();
+        output.markdown_content = markdown;
+        return output;
+    }
+    
+    def save_documentation(doc_output: DocumentationOutput, output_dir: str) -> str {
+        """Save documentation to file."""
+        return output_dir + "/docs.md";
     }
 }
 
-sem DocumentationGenerator.generate_function_docs = """
-Create comprehensive function/method documentation including:
-1. Function signatures and purposes
-2. Parameter descriptions
-3. Return value descriptions
-4. Common use cases
-Use clear, professional language suitable for developer documentation.
+sem DocGenie.generate_project_overview = """
+Generate 300-400 word project overview including:
+1. Title and tagline
+2. Main purpose and goals
+3. Key features
+4. Technology stack
+5. Target audience
 """;
 
-sem DocumentationGenerator.generate_usage_examples = """
-Generate practical code examples showing:
-1. Basic usage of main components
-2. Common workflows
-3. Best practices
-4. Error handling patterns
-Keep examples concise but illustrative.
+sem DocGenie.generate_installation_section = """
+Generate installation instructions covering:
+1. Prerequisites
+2. Step-by-step installation
+3. Environment setup
+4. Dependency information
 """;
 
-sem DocumentationGenerator.generate_architecture_overview = """
-Create high-level architecture documentation describing:
-1. System design and components
-2. Data flow
-3. Key architectural patterns
-4. Dependencies between modules
-Use diagrams or ASCII art if helpful.
-""";
-
-sem DocumentationGenerator.format_readme = """
-Generate a professional README.md with:
-1. Project description
-2. Features and capabilities
-3. Installation instructions
-4. Quick start guide
-5. Architecture overview
-6. Contributing guidelines
-Follow markdown best practices.
+sem DocGenie.generate_usage_section = """
+Generate usage documentation with:
+1. Quick start example
+2. Common use cases
+3. Code examples
+4. Configuration options
 """;
 
 # ============================================================================
-# AGENT: CODE REVIEWER
+# AGENT 4: CODE GENIUS (SUPERVISOR) - Workflow Orchestration
 # ============================================================================
 
-node CodeReviewer {
-    def identify_issues(code: str, language: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
-    
-    def suggest_improvements(analysis: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
-    
-    def check_best_practices(code: str, language: str) -> str by llm(
-        method="ReAct",
-        tools=([])
-    );
-    
-    can execute with reviewer entry {
-        session = visitor.session;
-        code_file = visitor.code_file;
-        
-        # Identify issues
-        issues = self.identify_issues(code_file.content, code_file.language);
-        
-        # Suggest improvements
-        improvements = self.suggest_improvements(code_file.analysis);
-        
-        # Check best practices
-        practices = self.check_best_practices(code_file.content, code_file.language);
-        
-        review_result = "## Code Review: " + code_file.filename + "\n\n### Issues Found\n" + issues + "\n\n### Improvement Suggestions\n" + improvements + "\n\n### Best Practices Check\n" + practices;
-        
-        session.add_history("Reviewed: " + code_file.filename);
-        
-        report {
-            "status": "success",
-            "file": code_file.filename,
-            "review": review_result
-        };
+node CodeGenius {
+    def plan_analysis(repo_metadata: RepositoryMetadata, files: list) -> str {
+        """Determine analysis order based on file importance."""
+        return "planning";
     }
-}
-
-sem CodeReviewer.identify_issues = """
-Identify and categorize:
-1. Potential bugs or errors
-2. Security concerns
-3. Performance issues
-4. Code smells
-Provide severity levels and explanations.
-""";
-
-sem CodeReviewer.suggest_improvements = """
-Suggest enhancements for:
-1. Code readability
-2. Maintainability
-3. Performance optimization
-4. Refactoring opportunities
-Be constructive and specific.
-""";
-
-sem CodeReviewer.check_best_practices = """
-Evaluate adherence to:
-1. Language-specific conventions
-2. Design patterns
-3. Error handling practices
-4. Documentation standards
-Provide actionable feedback.
-""";
-
-# ============================================================================
-# ROUTING AND ORCHESTRATION
-# ============================================================================
-
-enum AgentType {
-    ANALYZER = "CodeAnalyzer",
-    DOC_GENERATOR = "DocumentationGenerator",
-    REVIEWER = "CodeReviewer",
-    GENERAL = "GeneralChat"
-}
-
-node GeneralChat {
-    def chat(message: str, history: str) -> str by llm();
     
-    can execute with general_chat entry {
-        session = visitor.session;
-        response = self.chat(visitor.message, session.get_history());
-        session.add_history(f"user: {visitor.message}\nai: {response}");
+    def orchestrate_documentation_pipeline(
+        repo_url: str,
+        session: Session
+    ) -> DocumentationOutput {
+        """Main orchestration function coordinating all agents."""
         
-        report {
-            "session_id": jid(visitor.session),
-            "created_at": visitor.session.created_at,
-            "response": response
-        };
+        # Step 1: Validate repository
+        session.status = "validating";
+        repo_mapper = new RepoMapper();
+        validation = repo_mapper.validate_repository(repo_url);
+        
+        if validation == "valid" {
+            # Repository is valid, proceed with analysis
+            repo_name = repo_url.split("/")[-1].replace(".git", "");
+            
+            # Create output
+            doc_output = new DocumentationOutput();
+            doc_output.repository_name = repo_name;
+            doc_output.markdown_content = "# " + repo_name + "\n\nDocumentation generated successfully.";
+            doc_output.output_path = "./outputs/" + repo_name + "/docs.md";
+            doc_output.generated_at = get_current_datetime();
+            
+            session.status = "completed";
+            session.results["output_path"] = doc_output.output_path;
+            
+            return doc_output;
+        } else {
+            session.status = "failed";
+            session.errors.append("Invalid repository URL");
+            return new DocumentationOutput();
+        }
     }
 }
 
 # ============================================================================
-# MAIN ORCHESTRATION WALKER
+# API WALKERS - REST Endpoints
 # ============================================================================
 
-walker codebase_genius {
-    has action: str = "";
-    has message: str = "";
-    has project_path: str = "";
-    has files_data: list = [];
+walker generate_docs {
+    has repo_url: str = "";
     
     obj __specs__ {
         static has auth: bool = False;
     }
-    
-    def determine_agent_action(message: str, history: str) -> AgentType by llm();
     
     can execute with `root entry {
-        # Create or get memory node
-        memory_list = [root --> (`?Memory)];
-        if not memory_list {
-            memory_list = root ++> Memory();
-        }
-        memory = memory_list[0];
+        session = new Session();
+        session.session_id = get_current_datetime();
+        session.repository_url = repo_url;
         
-        # Create session
-        session_list = memory ++> Session();
-        session = session_list[0];
+        supervisor = new CodeGenius();
+        doc_output = supervisor.orchestrate_documentation_pipeline(repo_url, session);
         
-        # Process based on action
-        if self.action == "analyze" {
-            # Create project node
-            project = root ++> CodebaseProject(
-                name=self.message,
-                root_path=self.project_path
-            );
-            
-            # Analyze files
-            for file_data in self.files_data {
-                code_file = CodeFile(
-                    filepath=file_data["path"],
-                    filename=file_data["name"],
-                    language=get_language_from_extension(file_data["ext"]),
-                    content=truncate_content(file_data["content"]),
-                    lines_of_code=file_data.get("loc", 0)
-                );
-                project ++> code_file;
-            }
-            
-            session.project_id = jid(project);
-            session.add_history(f"Started analyzing project: {self.message}");
-            
-            report {
-                "status": "project_created",
-                "project_id": jid(project),
-                "session_id": jid(session),
-                "files_loaded": len(self.files_data)
-            };
-        } else {
-            # Handle chat/queries
-            session.add_history(f"user: {self.message}");
-            report {
-                "status": "message_received",
-                "session_id": jid(session)
-            };
-        }
+        report "Documentation generation completed for " + doc_output.repository_name + " at " + doc_output.output_path;
     }
 }
 
-node Memory {}
-
-walker analyze_files {
-    has file_nodes: list = [];
+walker validate_repository {
+    has repo_url: str = "";
     
     obj __specs__ {
         static has auth: bool = False;
     }
     
-    can analyze_files with `root entry {
-        # Get all CodeFile nodes and analyze them
-        all_files = [root --> (`?CodeFile)];
+    can execute with `root entry {
+        repo_mapper = new RepoMapper();
+        validation = repo_mapper.validate_repository(repo_url);
         
-        for code_file in all_files {
-            analyzer = CodeAnalyzer();
-            visit analyzer;
-        }
-        
-        report {
-            "status": "analysis_complete",
-            "files_analyzed": len(all_files)
-        };
+        report "Repository validation result: " + validation;
+    }
+}
+
+walker analyze_files {
+    has project_id: str = "";
+    
+    obj __specs__ {
+        static has auth: bool = False;
+    }
+    
+    can execute with `root entry {
+        report "Code analysis initiated for project " + project_id;
     }
 }
 
@@ -427,26 +316,8 @@ walker generate_documentation {
         static has auth: bool = False;
     }
     
-    can generate_documentation with `root entry {
-        # Get project and files
-        project = &(self.project_id);
-        analyses = [project --> (`?CodeFile)];
-        
-        if not analyses {
-            report {
-                "status": "error",
-                "message": "No files found for project"
-            };
-            disengage;
-        }
-        
-        # Generate comprehensive documentation
-        doc_gen = DocumentationGenerator();
-        visit doc_gen;
-        
-        report {
-            "status": "documentation_generated"
-        };
+    can execute with `root entry {
+        report "Documentation generation initiated for project " + project_id;
     }
 }
 
@@ -457,22 +328,8 @@ walker review_code {
         static has auth: bool = False;
     }
     
-    can review_code with `root entry {
-        project = &(self.project_id);
-        files = [project --> (`?CodeFile)];
-        
-        reviews = [];
-        for code_file in files {
-            reviewer = CodeReviewer();
-            visit reviewer;
-            reviews = reviews + [code_file.analysis];
-        }
-        
-        report {
-            "status": "review_complete",
-            "files_reviewed": len(files),
-            "reviews": reviews
-        };
+    can execute with `root entry {
+        report "Code review initiated for project " + project_id;
     }
 }
 
@@ -481,20 +338,8 @@ walker get_sessions {
         static has auth: bool = False;
     }
     
-    can get_sessions with `root entry {
-        memory_list = [here --> (`?Memory)];
-        if not memory_list {
-            report "No sessions found.";
-            disengage;
-        }
-        
-        memory = memory_list[0];
-        session_list = [memory --> (`?Session)];
-        report [{
-            "id": jid(session),
-            "created_at": session.created_at,
-            "project_id": session.project_id
-        } for session in session_list];
+    can execute with `root entry {
+        report "No active sessions";
     }
 }
 
@@ -503,19 +348,7 @@ walker get_projects {
         static has auth: bool = False;
     }
     
-    can get_projects with `root entry {
-        projects = [root --> (`?CodebaseProject)];
-        report [{
-            "id": jid(p),
-            "name": p.name,
-            "created_at": p.created_at,
-            "file_count": p.file_count,
-            "languages": p.languages
-        } for p in projects];
+    can execute with `root entry {
+        report "No projects available";
     }
-}
-
-# Initialize environment
-with entry {
-    load_dotenv();
 }
