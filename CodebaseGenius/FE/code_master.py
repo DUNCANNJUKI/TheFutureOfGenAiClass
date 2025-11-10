@@ -40,10 +40,19 @@ st.markdown("""
         --warning: #F57C00;
     }
     
-    /* Main container */
+    /* Main container - allow full width to ensure content is visible on narrow screens
+       and avoid horizontal clipping in embedded/scaled windows. */
     .main {
-        max-width: 1400px;
+        max-width: none !important;
+        width: 100% !important;
         margin: 0 auto;
+    }
+
+    /* Ensure the Streamlit app container itself uses full viewport width and
+       doesn't clip contents when the browser zoom or small windows are used. */
+    .stApp, .main .block-container {
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     
     /* Typography */
@@ -164,6 +173,21 @@ st.markdown("""
     .streamlit-expanderHeader {
         background: #f5f7fa;
         border-radius: 6px;
+    }
+
+    /* Expander content should be scrollable if large to prevent page overflow and
+       ensure the user can access the entire generated documentation without clipping. */
+    .streamlit-expanderContent {
+        max-height: 70vh;
+        overflow: auto;
+        padding-right: 8px;
+    }
+
+    /* Pre and code blocks should wrap and be scrollable horizontally if extremely long. */
+    pre, code {
+        white-space: pre-wrap;       /* wrap long lines */
+        word-break: break-word;
+        overflow-x: auto;
     }
     
     /* Responsive design */
