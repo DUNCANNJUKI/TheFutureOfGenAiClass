@@ -230,8 +230,13 @@ def validate_github_url(url):
     return True, "✅ URL is valid"
 
 def generate_demo_documentation(repo_url, repo_name):
-    """Generate demo documentation markdown"""
-    return f"""# {repo_name}
+    """Generate demo documentation markdown
+
+    Use a raw f-string so markdown code fences (```) are not treated
+    as escape sequences by Python. This prevents SyntaxWarnings when code
+    fences are present in the string.
+    """
+    return rf"""# {repo_name}
 
 ## Overview
 
@@ -239,14 +244,14 @@ This is a professional documentation for the **{repo_name}** repository, automat
 
 ## Installation
 
-\`\`\`bash
+```bash
 # Clone the repository
 git clone {repo_url}
 
 # Install dependencies
 cd {repo_name.lower()}
 pip install -r requirements.txt
-\`\`\`
+```
 
 ## Quick Start
 
@@ -267,25 +272,25 @@ pip install -r requirements.txt
 
 ### Main Class
 
-\`\`\`python
+```python
 class CodeMaster:
     def __init__(self, config):
         pass
     
     def process(self, input_data):
-        \"\"\"Process input data\"\"\"
+        '''Process input data'''
         pass
     
     def generate(self):
-        \"\"\"Generate output\"\"\"
+        '''Generate output'''
         pass
-\`\`\`
+```
 
 ## Usage Examples
 
 ### Basic Usage
 
-\`\`\`python
+```python
 from {repo_name.lower()} import CodeMaster
 
 # Initialize
@@ -296,7 +301,7 @@ result = master.process(data)
 
 # Generate output
 output = master.generate()
-\`\`\`
+```
 
 ## Contributing
 
