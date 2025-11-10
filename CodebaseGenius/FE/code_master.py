@@ -200,6 +200,40 @@ st.markdown("""
             font-size: 1.5em;
         }
     }
+
+    /* Additional safety rules to ensure the Streamlit UI does not clip
+       content in narrow or embedded windows and that key controls are visible */
+    .block-container {
+        padding: 1rem 2rem !important;
+        max-width: none !important;
+    }
+
+    /* Sidebar: constrain width so it doesn't overlap content and stays readable */
+    .css-1d391kg .css-1d391kg, .stSidebar, .sidebar .css-1d391kg {
+        max-width: 360px !important;
+        min-width: 220px !important;
+    }
+
+    /* App container overflow handling to allow horizontal scroll on very wide tables */
+    .stApp {
+        overflow-x: auto !important;
+    }
+
+    /* Download and control buttons: expand to container width for clarity */
+    .stDownloadButton > button, .stButton > button {
+        width: 100% !important;
+    }
+
+    /* Metrics: ensure minimum size so labels are readable and don't wrap badly */
+    .stMetric {
+        min-width: 140px !important;
+    }
+
+    /* Make long pre/code blocks horizontally scrollable inside containers */
+    .element-container pre, .element-container code {
+        white-space: pre !important;
+        overflow-x: auto !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
