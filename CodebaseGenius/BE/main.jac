@@ -1,4 +1,18 @@
-"""Code Master - Multi-Agent Documentation Backend"""
+"""Code Master - Multi-Agent Documentation Backend
+
+High-level overview:
+ - This JAC module defines the multi-agent backend used by The Code Master.
+ - Agents:
+     * RepoMapper   - validates repository URLs and identifies repo provider (GitHub/GitLab)
+     * CodeAnalyzer - parses code files, extracts functions/classes, and builds a Code Context Graph (CCG)
+     * DocGenie     - assembles documentation sections using analyzed data (LLM-backed stubs)
+     * CodeGenius   - supervisor that orchestrates the full pipeline end-to-end
+
+Notes for contributors:
+ - Keep walkers small and well-documented. Walkers are used to expose REST-like endpoints.
+ - Use the provided node types (RepositoryMetadata, CodeFile, CodeContextGraph, etc.) as the canonical data shapes.
+ - When extending, document inputs/outputs for each walker and agent method.
+"""
 
 # ============================================================================
 # DATA MODELS
@@ -15,6 +29,12 @@ node RepositoryMetadata {
     has cloned_at: str = "";
 }
 
+# RepositoryMetadata: canonical metadata for a repository
+# - url: full clone URL
+# - name: repo name (slug)
+# - local_path: where a clone will be placed on disk during analysis
+# - description, readme_summary, primary_language, file_count, cloned_at
+
 node CodeFile {
     has filepath: str = "";
     has filename: str = "";
@@ -28,6 +48,11 @@ node CodeFile {
     has complexity_score: float = 0.0;
 }
 
+# CodeFile: represents a single file in the repository after analysis
+# - filepath: relative path inside repo
+# - content: raw source
+# - functions/classes/imports: extracted structures for documentation
+
 node FunctionNode {
     has name: str = "";
     has file: str = "";
@@ -37,6 +62,8 @@ node FunctionNode {
     has calls: list = [];
     has called_by: list = [];
 }
+
+# FunctionNode: lightweight representation of a function/method used for CCG linking
 
 node CodeContextGraph {
     has repository_name: str = "";
@@ -48,6 +75,10 @@ node CodeContextGraph {
     has architecture_overview: str = "";
 }
 
+# CodeContextGraph (CCG): holds repository-wide relationships and entry-points used by DocGenie
+# - relationships: adjacency-like mapping between files/functions
+# - architecture_overview: human-friendly summary produced after analysis
+
 node DocumentationOutput {
     has repository_name: str = "";
     has markdown_content: str = "";
@@ -55,6 +86,10 @@ node DocumentationOutput {
     has generated_at: str = get_current_datetime();
     has output_path: str = "";
 }
+
+# DocumentationOutput: final artifact produced by DocGenie
+# - markdown_content: full markdown string
+# - sections: optionally hold per-section markdown segments
 
 node CodebaseProject {
     has name: str = "";
@@ -86,14 +121,21 @@ node Session {
     }
 }
 
+# Session: short-lived process state for a single documentation run
+# - session_id: timestamp-based id
+# - progress: mapping of stage->status
+# - results/errors/history: used for debugging and UI reporting
+
 node RepoMapper {
     def validate_repository(url: str) -> str {
-        """Validate that the repository URL is reachable."""
+        # Validate that the repository URL is syntactically correct and reachable.
+        # TODO: extend to perform an HTTP HEAD or git ls-remote check.
         return "valid";
     }
     
     def get_repo_type(url: str) -> str {
-        """Determine if URL is GitHub or GitLab."""
+        # Determine provider by hostname in the URL (github.com, gitlab.com, etc.).
+        # Return canonical provider string (e.g. "github", "gitlab").
         return "github";
     }
 }
@@ -104,17 +146,19 @@ node RepoMapper {
 
 node CodeAnalyzer {
     def parse_code_structure(code: str, language: str, filepath: str) -> str {
-        """Parse code to extract functions and classes."""
+        # Parse source text and extract a serialized structure of functions/classes.
+        # This is a pluggable function: replace with tree-sitter or language-specific parser.
         return "";
     }
     
     def analyze_code_file(code: str, language: str, filepath: str) -> str {
-        """Comprehensive analysis of a single code file."""
+        # Perform analysis on a single file and populate a CodeFile node representation.
+        # Expected output: filepath or a reference to the created CodeFile node.
         return filepath;
     }
     
     def estimate_complexity(code: str) -> float {
-        """Estimate cyclomatic complexity based on code patterns."""
+        # Heuristic complexity estimator. Replace with better metrics if required.
         complexity_indicators = ["if ", "for ", "while ", "def ", "class "];
         count = 0;
         for indicator in complexity_indicators {
@@ -129,7 +173,8 @@ node CodeAnalyzer {
     );
     
     def build_ccg(files: list) -> CodeContextGraph {
-        """Build Code Context Graph from analyzed files."""
+        # Build a Code Context Graph (CCG) from the list of analyzed CodeFile nodes.
+        # This function should populate relationships, entry_points and summary fields.
         ccg = new CodeContextGraph();
         ccg.total_files = len(files);
         ccg.relationships = {};
@@ -163,7 +208,8 @@ node DocGenie {
     );
     
     def generate_api_reference(analyzed_files: list) -> str {
-        """Generate API reference from analyzed files."""
+        # Generate a basic API reference from analyzed file metadata. For richer
+        # output, iterate analyzed_files and use FunctionNode/Class data.
         return "## API Reference\n\nAnalyzed " + str(len(analyzed_files)) + " files.";
     }
     
@@ -173,7 +219,7 @@ node DocGenie {
         usage: str,
         api_reference: str
     ) -> DocumentationOutput {
-        """Assemble all sections into final documentation."""
+    # Combine generated sections into a single markdown document.
         markdown = "# Documentation\n\n" + overview + "\n\n" +
                   "## Installation\n\n" + installation + "\n\n" +
                   "## Usage\n\n" + usage + "\n\n" +
@@ -185,7 +231,7 @@ node DocGenie {
     }
     
     def save_documentation(doc_output: DocumentationOutput, output_dir: str) -> str {
-        """Save documentation to file."""
+        # Save markdown to a standard path; create directories as needed upstream.
         return output_dir + "/docs.md";
     }
 }
@@ -229,7 +275,13 @@ node CodeGenius {
         repo_url: str,
         session: Session
     ) -> DocumentationOutput {
-        """Main orchestration function coordinating all agents."""
+        # Main orchestration function coordinating RepoMapper, CodeAnalyzer and DocGenie.
+        # Flow:
+        #  1) Validate the URL via RepoMapper
+        #  2) Clone/inspect repository (implementation detail left to host env)
+        #  3) Analyze files via CodeAnalyzer
+        #  4) Build CCG and pass to DocGenie
+        #  5) Return DocumentationOutput
         
         # Step 1: Validate repository
         session.status = "validating";
@@ -270,14 +322,18 @@ walker generate_docs {
         static has auth: bool = False;
     }
     
+    # Public walker for generating documentation for a repository URL.
+    # Input: repo_url (string)
+    # Output: writes a report and produces DocumentationOutput via CodeGenius.
     can execute with `root entry {
         session = new Session();
         session.session_id = get_current_datetime();
         session.repository_url = repo_url;
-        
+
         supervisor = new CodeGenius();
         doc_output = supervisor.orchestrate_documentation_pipeline(repo_url, session);
-        
+
+        # Report emits a textual result visible to caller/UI
         report "Documentation generation completed for " + doc_output.repository_name + " at " + doc_output.output_path;
     }
 }
@@ -289,10 +345,11 @@ walker validate_repository {
         static has auth: bool = False;
     }
     
+    # Walker to validate repository URL reachability and metadata.
     can execute with `root entry {
         repo_mapper = new RepoMapper();
         validation = repo_mapper.validate_repository(repo_url);
-        
+
         report "Repository validation result: " + validation;
     }
 }
@@ -304,6 +361,8 @@ walker analyze_files {
         static has auth: bool = False;
     }
     
+    # Walker to trigger file-level analysis for a project. Implementations should
+    # populate CodeFile and FunctionNode nodes and update CCG.
     can execute with `root entry {
         report "Code analysis initiated for project " + project_id;
     }
@@ -316,6 +375,7 @@ walker generate_documentation {
         static has auth: bool = False;
     }
     
+    # Deprecated alias walker for documentation generation - prefer generate_docs.
     can execute with `root entry {
         report "Documentation generation initiated for project " + project_id;
     }
@@ -328,6 +388,7 @@ walker review_code {
         static has auth: bool = False;
     }
     
+    # Trigger a code review walker. Replace with richer checks as needed.
     can execute with `root entry {
         report "Code review initiated for project " + project_id;
     }
@@ -338,6 +399,7 @@ walker get_sessions {
         static has auth: bool = False;
     }
     
+    # Return active session summaries (stub implementation).
     can execute with `root entry {
         report "No active sessions";
     }
@@ -348,6 +410,7 @@ walker get_projects {
         static has auth: bool = False;
     }
     
+    # Return projects known to the system (stub implementation).
     can execute with `root entry {
         report "No projects available";
     }
