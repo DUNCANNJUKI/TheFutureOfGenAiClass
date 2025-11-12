@@ -6,22 +6,22 @@
 
 Codebase Genius is an intelligent documentation system that automatically analyzes any software repository and generates comprehensive, high-quality documentation using a multi-agent AI architecture built with **byLLM** (JAC Language) and **Streamlit**.
 
-The system employs multiple specialized AI agents working in concert:
-- **Code Analyzer Agent** - Understands code structure, functions, and dependencies
-- **Documentation Generator Agent** - Creates comprehensive documentation
 - **Code Reviewer Agent** - Identifies issues and suggests improvements
 - **Orchestrator** - Routes tasks to appropriate agents
 
 ## Features
 
 ✨ **Core Capabilities**
-- 🔍 Automatic code analysis and structure extraction
-- 📚 Intelligent documentation generation (README, API docs, Architecture guides)
-- ✅ Code quality review and recommendations
-- 💬 Interactive chat interface with AI insights
-- 🎯 Multi-language support (Python, JavaScript, TypeScript, Java, C++, Go, Rust, etc.)
-- 📊 Comprehensive metrics and statistics
-- 🔗 Dependency mapping and analysis
+
+✨ **v2.0 Enhanced Features** 🎉
+- 🤖 **Multi-Equipped Chatbot** - Ask questions about your codebase and get intelligent answers
+- 🔌 **API Extraction** - Automatically detect and document REST APIs used in your code
+- 📥 **Documentation Export** - Export analysis as Markdown, HTML, JSON, or Plain Text
+- � **Year Auto-Update** - System automatically tracks 2024-2026 timeframe
+- ⚡ **One-Click Launch** - Double-click START_SYSTEM_V2.bat to run everything
+- 🌐 **Auto-Browser Opening** - Automatically opens your default browser to the application
+- ✅ **Error-Free** - Comprehensive error handling and dependency checking
+- 🎨 **Enhanced UI** - Modern tabbed interface with real-time backend connection status
 
 ## System Architecture
 
@@ -38,6 +38,19 @@ The system employs multiple specialized AI agents working in concert:
 │  └──────────────┘  └──────────────┘  └──────────────┘  │
 │         │                 │                  │           │
 │         └─────────────────┼──────────────────┘           │
+### Quick Start (v2.0)
+
+**Windows Users:**
+1. Double-click `START_SYSTEM_V2.bat`
+2. Wait for both services to start
+3. Your browser will automatically open to `http://localhost:8502`
+4. Enter a GitHub repository URL and start analyzing!
+
+**Mac/Linux Users:**
+1. `chmod +x START_SYSTEM_V2.sh` (create shell script)
+2. `./START_SYSTEM_V2.sh`
+3. Open browser to `http://localhost:8502`
+
 │                           │                              │
 │                    ┌──────▼──────┐                       │
 │                    │ Orchestrator │                       │

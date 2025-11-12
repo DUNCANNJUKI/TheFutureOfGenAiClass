@@ -8,10 +8,10 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-import os
 import json
 import subprocess
 from datetime import datetime
+Developed by Duncan N. for Developers (2024-2026)
 from pathlib import Path
 import logging
 

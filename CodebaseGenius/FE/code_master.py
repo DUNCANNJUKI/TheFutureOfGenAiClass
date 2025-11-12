@@ -9,7 +9,6 @@ import requests
 import json
 from datetime import datetime
 import time
-from io import StringIO
 import os
 
 # PAGE CONFIGURATION
