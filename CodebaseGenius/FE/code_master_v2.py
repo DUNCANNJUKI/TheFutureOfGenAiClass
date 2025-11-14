@@ -1,7 +1,7 @@
 """
 The Code Master - Enhanced Frontend with Chatbot & Download
 A sophisticated web application for generating professional documentation from GitHub repositories
-Developed by Duncan N. for Developers (2024-2026)
+Developed by Duncan N. for Developers (2025)
 """
 
 import streamlit as st
@@ -370,7 +370,7 @@ with col2:
     st.metric("Version", "2.0.0")
 
 with col3:
-    st.metric("Updated", "2024-2026")
+    st.metric("Updated", "2025")
 
 # ============================================================================
 # INPUT SECTION
@@ -556,7 +556,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("""
 <footer>
     <p>The Code Master v2.0 - Powered by Multi-Agent AI</p>
-    <p style="font-size: 0.9em; margin-top: 10px;">Developed by Duncan N. for Developers | 2024-2026 | v2.0.0</p>
+    <p style="font-size: 0.9em; margin-top: 10px;">Developed by Duncan N. for Developers | 2025 | v2.0.0</p>
     <p style="font-size: 0.85em; margin-top: 5px;">Features: Multi-Agent Analysis • Smart Chatbot • API Extraction • Documentation Export</p>
 </footer>
 """, unsafe_allow_html=True)

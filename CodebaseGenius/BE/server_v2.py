@@ -1,7 +1,7 @@
 """
 Code Master Backend Server - Enhanced Edition
 FastAPI wrapper for JAC multi-agent backend with chatbot, API extraction, and documentation export
-Version: 2.0.0 | Developed by Duncan N. for Developers (2024-2026)
+Version: 2.0.0 | Developed by Duncan N. for Developers (2025)
 """
 
 from fastapi import FastAPI, HTTPException

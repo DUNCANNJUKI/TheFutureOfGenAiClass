@@ -51,6 +51,47 @@ Codebase Genius is an intelligent documentation system that automatically analyz
 2. `./START_SYSTEM_V2.sh`
 3. Open browser to `http://localhost:8502`
 
+## Technology Stack & Languages
+
+### 🛠️ **Backend Technologies**
+- **JAC Language** - Multi-agent orchestration and AI reasoning
+- **Python 3.10+** - Core runtime and scripting
+- **FastAPI** - REST API framework for v2.0
+- **Uvicorn** - ASGI server
+- **byLLM** - LLM integration framework
+- **Pydantic** - Data validation and serialization
+
+### 🎨 **Frontend Technologies**
+- **Python** - Backend logic
+- **Streamlit** - UI framework
+- **HTML/CSS/JavaScript** - Client-side rendering
+- **HTTP/JSON** - Frontend-backend communication
+
+### 🔧 **Development & DevOps**
+- **Git** - Version control
+- **GitHub** - Repository hosting
+- **PowerShell/Bash** - Automation scripts
+- **Docker** - Containerization (optional)
+
+### 📊 **Supported Analysis Languages**
+The system can analyze codebases written in:
+- Python
+- JavaScript/TypeScript
+- Java
+- C/C++
+- Go
+- Rust
+- Ruby
+- PHP
+- C#
+- Swift
+- Kotlin
+- SQL
+- **JAC** (Jaseci Agent Communication)
+- Markdown
+
+## System Architecture
+
 │                           │                              │
 │                    ┌──────▼──────┐                       │
 │                    │ Orchestrator │                       │

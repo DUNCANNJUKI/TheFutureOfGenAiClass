@@ -2,7 +2,7 @@
 
 **Status:** ✅ **LIVE AND PRODUCTION READY**  
 **Version:** 2.0.0  
-**Release Date:** November 2024  
+**Release Date:** November 2025  
 **Platform:** Windows, macOS, Linux  
 **GitHub:** https://github.com/DUNCANNJUKI/TheFutureOfGenAiClass
 
