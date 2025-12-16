@@ -1,7 +1,7 @@
 """
 CLI demo to run the JAC fallback runner
 """
-from run_jac_fallback import run_recommendation
+from jac.run_jac_fallback import run_recommendation
 import json
 
 if __name__ == '__main__':

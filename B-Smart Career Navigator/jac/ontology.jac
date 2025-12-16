@@ -1,25 +1,35 @@
-# Ontology definitions (JAC pseudo-syntax)
+/*
+Ontology for B-Smart Career Navigator (JAC)
 
-# Node types
-new_node_type(Person)
-new_node_type(Skill)
-new_node_type(Role)
-new_node_type(Industry)
-new_node_type(Course)
-new_node_type(Certification)
-new_node_type(Company)
-new_node_type(SalaryBand)
-new_node_type(Location)
+Node Types:
+	Person, Skill, Role, Industry, Course, Certification, Company, SalaryBand, Location
 
-# Edge types
-new_edge_type(HAS_SKILL)
-new_edge_type(REQUIRES_SKILL)
-new_edge_type(LEADS_TO)
-new_edge_type(TRANSITIONS_TO)
-new_edge_type(LEARNS_FROM)
-new_edge_type(AVAILABLE_IN)
-new_edge_type(RECOMMENDS)
-new_edge_type(GROWS_INTO)
+Edge Types (labels used on edges):
+	HAS_SKILL, REQUIRES_SKILL, LEADS_TO, TRANSITIONS_TO,
+	LEARNS_FROM, AVAILABLE_IN, RECOMMENDS, GROWS_INTO, LOCATED_IN
 
-# Example helper: create role with required skills (walker-friendly)
-# walker code will rely on these node/edge names exactly as above
+This file provides helper macros/walkers to create nodes and edges in a consistent way
+so the walkers can rely on these canonical labels.
+*/
+
+walker create_node (nid, ntype, props = {}) {
+	# create or update a node with id `nid` and type `ntype`
+	if (!node_exists(nid)) {
+		node(nid, ntype, props);
+	} else {
+		# update props if needed
+		set_node_prop(nid, props);
+	}
+}
+
+walker connect (src, dst, etype, props = {}) {
+	# add directed edge with label `etype`
+	add_edge(src, dst, { "type": etype, "props": props });
+}
+
+/*
+Note: The actual JAC runtime provides primitives such as `node()`, `edge()`,
+`walker`, and graph traversal. The helpers above are intentionally small and
+are expected to be adapted to your JAC version. They document the canonical
+node and edge labels used by B-Smart.
+*/

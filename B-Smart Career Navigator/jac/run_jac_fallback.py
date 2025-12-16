@@ -16,9 +16,9 @@ import os
 import json
 
 # import the Python walkers/orchestrator components
-from ..backend.sample_graph import build_sample_graph
-from ..backend.walkers import profile_analyzer, scoring_and_ranking, alternative_path_generator, build_learning_plan
-from ..backend.walkers import deterministic_score
+from backend.sample_graph import build_sample_graph
+from backend.walkers import profile_analyzer, scoring_and_ranking, alternative_path_generator, build_learning_plan
+from backend.walkers import deterministic_score
 
 BASE = os.path.dirname(__file__)
 SCHEMA_PATH = os.path.join(os.path.dirname(BASE), "schema", "output_schema.json")
