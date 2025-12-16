@@ -171,13 +171,7 @@ with right:
         st.info("No recommendation yet — upload a CV or paste text and click 'Run Recommendation'")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Footer with dynamic year and copyright
-year = datetime.utcnow().year
-st.markdown("<div style='margin-top:16px; text-align:center; color:#5b6b72'>"+
-            f"© {year} B‑Smart Career Navigator. Developed by Duncan Njuki, GenAI student OUK."+
-            "</div>", unsafe_allow_html=True)
-
-st.markdown("\n\n")
+# (footer will be rendered after the interactive area)
 
 
 def _generate_pdf_bytes(recommendation: dict, profile: dict) -> bytes:
@@ -264,14 +258,23 @@ def _generate_pdf_bytes(recommendation: dict, profile: dict) -> bytes:
     return buf.read()
 
 
-if st.button("Download Recommendation PDF"):
-    rec = st.session_state.get("recommendation")
-    prof = st.session_state.get("extracted", {})
-    if not rec:
-        st.error("No recommendation available to export. Run Recommendation first.")
-    else:
-        try:
-            pdf_bytes = _generate_pdf_bytes(rec, prof)
-            st.download_button("Download PDF", data=pdf_bytes, file_name="BSCN_recommendation.pdf", mime="application/pdf")
-        except Exception as e:
-            st.error(f"Failed to generate PDF: {e}")
+cols = st.columns([1, 2, 1])
+with cols[1]:
+    if st.button("Generate PDF"):
+        rec = st.session_state.get("recommendation")
+        prof = st.session_state.get("extracted", {})
+        if not rec:
+            st.error("No recommendation available to export. Run Recommendation first.")
+        else:
+            try:
+                pdf_bytes = _generate_pdf_bytes(rec, prof)
+                st.download_button("Download PDF", data=pdf_bytes, file_name="BSCN_recommendation.pdf", mime="application/pdf")
+            except Exception as e:
+                st.error(f"Failed to generate PDF: {e}")
+
+# Final centered footer
+year = datetime.utcnow().year
+st.markdown(
+    f"<div style='margin-top:20px; text-align:center; color:#e6eef3; font-size:13px; padding-bottom:12px'>© {year} B‑Smart Career Navigator. Developed by Duncan Njuki, GenAI student OUK.</div>",
+    unsafe_allow_html=True,
+)
