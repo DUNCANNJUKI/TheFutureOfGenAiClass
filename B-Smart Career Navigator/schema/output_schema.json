@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "B-Smart Career Navigator Output",
+  "type": "object",
+  "required": [
+    "recommended_role",
+    "confidence_score",
+    "why_this_role",
+    "missing_skills",
+    "learning_plan",
+    "time_estimate_months",
+    "cost_estimate",
+    "alternative_paths"
+  ],
+  "properties": {
+    "recommended_role": { "type": "string" },
+    "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "why_this_role": { "type": "array", "items": { "type": "string" } },
+    "missing_skills": { "type": "array", "items": { "type": "string" } },
+    "learning_plan": { "type": "array", "items": { "type": "string" } },
+    "time_estimate_months": { "type": "integer", "minimum": 0 },
+    "cost_estimate": { "type": "number", "minimum": 0 },
+    "alternative_paths": { "type": "array", "items": { "type": "object" } }
+  }
+}
