@@ -1,78 +1,43 @@
-# B-Smart Career Navigator — Scaffold
+# B-Smart Career Navigator (BSCN)
 
-This folder contains the production system prompt, JAC walker skeletons, a deterministic Python fallback runner, and a FastAPI orchestrator for prototyping.
+Lightweight graph-first career recommendation scaffold. Built with deterministic Python walkers (JAC-compatible) and a FastAPI orchestrator plus a Streamlit frontend for demos.
 
-Key files:
-- `SYSTEM_PROMPT.md` — the strict production system prompt (must be used by orchestration layer)
-- `jac/ontology.jac` — node/edge declarations for the domain model (skeleton)
-- `jac/walkers.jac` — JAC walkers (skeleton/translation)
-- `jac/run_jac_fallback.py` — Python bridge that runs the deterministic walkers as a JAC fallback
-- `jac/run_demo.py` — CLI demo to run the fallback
-- `backend/` — Python backend: graph model, walkers, orchestrator (`app.py` exposes `/recommend`)
-- `schema/output_schema.json` — strict JSON schema for outputs
+Quick start (recommended)
 
-Developer notes:
-- All career logic must be implemented in JAC walkers.
-- LLMs are only allowed to parse user input into JSON and to articulate explanations based on walker output.
-- Ensure all scores are deterministic and numeric per the weights in `SYSTEM_PROMPT.md`.
-
-How to run locally (quick)
-
-Preferred (one-step launcher):
-
-```powershell
-cd "C:\xampp\htdocs\GenAIClass\TheFutureOfGenAiClass\B-Smart Career Navigator"
-call START_BSMART.bat
-```
-
-Manual (step-by-step):
-
-```powershell
-cd "C:\xampp\htdocs\GenAIClass\TheFutureOfGenAiClass\B-Smart Career Navigator\backend"
-# BSCN — B-Smart Career Navigator
-
-BSCN (B-Smart Career Navigator) is a graph-first career intelligence scaffold that uses JAC as the decision engine. The repository includes a deterministic Python fallback runner and a FastAPI orchestrator for prototyping.
-
-Key files:
-- `jac/ontology.jac` — node/edge declarations for the domain model (skeleton)
-- `jac/walkers.jac` — JAC walkers (skeleton/translation)
-- `jac/run_jac_fallback.py` — Python bridge that runs the deterministic walkers as a JAC fallback
-- `jac/run_demo.py` — CLI demo to run the fallback
-- `backend/` — Python backend: graph model, walkers, orchestrator (`app.py` exposes `/recommend`)
-- `schema/output_schema.json` — strict JSON schema for outputs
-
-Developer notes:
-- All career logic must be implemented in JAC walkers.
-- LLMs are only allowed to parse user input into JSON and to articulate explanations based on walker output.
-- Ensure all scores are deterministic and numeric per the weights in the system design.
-
-How to run locally (quick)
-
-Preferred (one-step launcher):
+1. Create/activate the virtual environment `venv_bscn` in the `BSCN` folder and install requirements:
 
 ```powershell
 cd "C:\xampp\htdocs\GenAIClass\TheFutureOfGenAiClass\BSCN"
+python -m venv venv_bscn
+.\venv_bscn\Scripts\Activate.ps1
+python -m pip install -r backend\requirements.txt
+python -m pip install -r frontend\requirements.txt
+```
+
+2. Use the launcher to start backend and frontend (creates two windows and opens the browser):
+
+```powershell
 call START_BSMART.bat
 ```
 
-Manual (step-by-step):
+3. Open `http://127.0.0.1:8502` in your browser if it does not open automatically.
+
+Notes
+- The frontend calls `/extract` to convert free text into structured JSON, and `/recommend` to run deterministic graph walkers and return a strict recommendation JSON.
+- Sensitive system prompts are moved to `secure/` and not tracked.
+
+If anything fails, check the backend logs (uvicorn window) for errors and ensure `venv_bscn` is activated before installing packages.
+
+Development
+- Core orchestrator: `backend/app.py`
+- Extractor: `backend/llm_extract.py`
+- Deterministic walkers and graph: `backend/walkers.py`, `backend/sample_graph.py`
+- Frontend: `frontend/streamlit_app.py`
+
+If you want the spaCy NER model, install it into `venv_bscn`:
 
 ```powershell
-cd "C:\xampp\htdocs\GenAIClass\TheFutureOfGenAiClass\BSCN\backend"
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
-python -m uvicorn backend.app:app --host 127.0.0.1 --port 8002
+.\venv_bscn\Scripts\Activate.ps1
+python -m pip install spacy
+python -m spacy download en_core_web_sm
 ```
-
-To run the JAC fallback demo (from project root):
-
-```powershell
-cd "C:\xampp\htdocs\GenAIClass\TheFutureOfGenAiClass\BSCN"
-python -m jac.run_demo
-```
-
-Next steps:
-1. Implement the `walker` bodies in real JAC code matching your runtime primitives.
-2. Add richer, localized graph data (jobs, salary bands, course pricing, regional demand).
-3. Add CI tests that start the orchestrator and validate outputs against `schema/output_schema.json`.

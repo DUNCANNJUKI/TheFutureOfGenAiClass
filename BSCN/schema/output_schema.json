@@ -17,7 +17,7 @@
     "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
     "why_this_role": { "type": "array", "items": { "type": "string" } },
     "missing_skills": { "type": "array", "items": { "type": "string" } },
-    "learning_plan": { "type": "array", "items": { "type": "string" } },
+    "learning_plan": { "type": "array", "items": { "type": "object", "properties": { "course_id": { "type": "string" }, "title": { "type": "string" }, "teaches": { "type": "string" } }, "required": ["course_id","title","teaches"] } },
     "time_estimate_months": { "type": "integer", "minimum": 0 },
     "cost_estimate": { "type": "number", "minimum": 0 },
     "alternative_paths": { "type": "array", "items": { "type": "object" } }

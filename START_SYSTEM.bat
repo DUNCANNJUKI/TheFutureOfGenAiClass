@@ -210,6 +210,23 @@ echo.
 
 cd CodebaseGenius\FE
 
+REM -----------------------------------------------------------------------------
+REM Start BSCN (B-Smart Career Navigator) backend + frontend if present
+REM -----------------------------------------------------------------------------
+if exist "BSCN\backend\app.py" (
+    echo Starting BSCN backend on port 8002...
+    start "BSCN Backend" cmd /k "cd /d %~dp0BSCN && venv_bscn\Scripts\activate.bat && python -m uvicorn backend.app:app --host 127.0.0.1 --port 8002"
+) else (
+    echo BSCN backend not found, skipping...
+)
+
+if exist "BSCN\frontend\streamlit_app.py" (
+    echo Starting BSCN frontend on port 8502...
+    start "BSCN Frontend" cmd /k "cd /d %~dp0BSCN && venv_bscn\Scripts\activate.bat && python -m streamlit run frontend\streamlit_app.py --server.port 8502"
+) else (
+    echo BSCN frontend not found, skipping...
+)
+
 REM Set environment variables for better performance
 set PYTHONUNBUFFERED=1
 set PYTHONIOENCODING=utf-8

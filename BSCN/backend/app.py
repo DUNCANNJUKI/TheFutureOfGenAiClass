@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import json
@@ -7,6 +8,7 @@ from jsonschema import validate, ValidationError
 
 from .sample_graph import build_sample_graph
 from .walkers import profile_analyzer, scoring_and_ranking, alternative_path_generator, build_learning_plan
+from .llm_extract import extract_json_from_text
 
 BASE_DIR = os.path.dirname(__file__)
 SCHEMA_PATH = os.path.join(os.path.dirname(BASE_DIR), "schema", "output_schema.json")
@@ -15,6 +17,15 @@ with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
 
 app = FastAPI(title="B-Smart Career Navigator - Orchestrator")
 
+# Allow requests from local frontends (Streamlit) and tools during development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8500", "http://localhost:8501", "http://127.0.0.1:8501", "http://127.0.0.1:8502", "http://localhost:8502"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class ExtractedInput(BaseModel):
     # This endpoint expects the LLM to have already returned structured JSON
     id: str
@@ -22,6 +33,10 @@ class ExtractedInput(BaseModel):
     skills: List[str] = []
     interests: List[str] = []
     location: str = ""
+
+
+class RawTextInput(BaseModel):
+    raw_text: str
 
 @app.post("/recommend")
 async def recommend(payload: ExtractedInput):
@@ -52,7 +67,7 @@ async def recommend(payload: ExtractedInput):
             f"Role aligns with skills: {', '.join([s.split(':',1)[1] for s in graph.incoming(role_id) if s.startswith('skill:')])}" if graph.incoming(role_id) else "Role matches candidate profile"
         ],
         "missing_skills": [s.split(":",1)[1] for s in missing_skills],
-        "learning_plan": [{"course_id": item["course"], "title": item["title"], "teaches": item["teaches"}] for item in learning_plan],
+        "learning_plan": [{"course_id": item["course"], "title": item["title"], "teaches": item["teaches"]} for item in learning_plan],
         "time_estimate_months": int(len(missing_skills) * 3),
         "cost_estimate": int(len(learning_plan) * 200),
         "alternative_paths": [{"role": graph.get_node(a["role"]).props.get("title", a["role"])} for a in alternatives]
@@ -63,6 +78,31 @@ async def recommend(payload: ExtractedInput):
     except ValidationError as e:
         raise HTTPException(status_code=500, detail=f"Output validation error: {e.message}")
     return out
+
+
+@app.post("/api/extract")
+@app.post("/extract")
+async def extract(payload: RawTextInput):
+    """Run the configured LLM (or deterministic fallback) to extract the
+    required JSON fields. Returns the extracted JSON which can be POSTed
+    to `/recommend` unchanged.
+    """
+    extracted = extract_json_from_text(payload.raw_text)
+    # debug-friendly log (visible in uvicorn logs)
+    try:
+        import logging
+        logging.getLogger("bscn.extract").info("Extracted fields: %s", {k: v for k, v in extracted.items() if k in ('name','skills','location')})
+    except Exception:
+        pass
+    # Minimal validation/normalization to match ExtractedInput
+    result = {
+        "id": extracted.get("id", "person:extracted"),
+        "name": extracted.get("name", ""),
+        "skills": extracted.get("skills", []),
+        "interests": extracted.get("interests", []),
+        "location": extracted.get("location", "")
+    }
+    return result
 
 if __name__ == "__main__":
     import uvicorn
